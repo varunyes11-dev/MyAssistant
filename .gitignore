@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+.venv/
+
+# macOS
+.DS_Store
+
+# Audio Recordings
+*.wav
+
+# Logs
+*.log
+
+# Environment Variables
+.env
+
+# Databases
+*.db
