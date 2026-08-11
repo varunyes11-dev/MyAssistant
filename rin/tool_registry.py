@@ -2,6 +2,7 @@ from .tools import (
     calculate,
     get_battery_status,
     get_current_datetime,
+    get_system_info,
 )
 
 
@@ -52,6 +53,15 @@ class ToolRegistry:
     name="get_battery_status",
     function=get_battery_status,
     description="Get the current Mac battery percentage and charging status.",
+    parameters={
+        "type": "object",
+        "properties": {},
+    },
+)
+        self.register(
+    name="get_system_info",
+    function=get_system_info,
+    description="Get useful non-sensitive information about this Mac.",
     parameters={
         "type": "object",
         "properties": {},
