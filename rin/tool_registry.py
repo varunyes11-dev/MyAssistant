@@ -6,6 +6,7 @@ from .tools import (
     open_application,
     open_website,
 )
+from .memory import Memory
 
 
 class ToolRegistry:
@@ -13,8 +14,9 @@ class ToolRegistry:
     Stores, describes, and executes tools available to Rin.
     """
 
-    def __init__(self):
+    def __init__(self, memory: Memory):
         self.tools = {}
+        self.memory = memory
 
         self._register_builtin_tools()
 
@@ -105,12 +107,70 @@ class ToolRegistry:
                 "properties": {
                     "url": {
                         "type": "string",
-                        "description": (
-                            "The website URL to open."
-                        ),
+                        "description": "The website URL to open.",
                     }
                 },
                 "required": ["url"],
+            },
+        )
+
+        self.register(
+            name="save_memory",
+            function=self.memory.add,
+            description=(
+    "Save the user's complete factual statement "
+    "to Rin's long-term memory. Preserve the full "
+    "meaning of what the user said. For example, "
+    "if the user says 'Remember that Varun likes Python', "
+    "save 'Varun likes Python', not just 'Python'."
+),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "memory": {
+                        "type": "string",
+                        "description": (
+    "The complete fact or statement to remember. "
+    "Preserve the subject, relationship, and important "
+    "details from the user's original statement."
+),
+                    }
+                },
+                "required": ["memory"],
+            },
+        )
+
+        self.register(
+            name="get_memories",
+            function=self.memory.get_all,
+            description=(
+                "Retrieve all information stored "
+                "in Rin's long-term memory."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {},
+            },
+        )
+
+        self.register(
+            name="forget_memory",
+            function=self.memory.remove,
+            description=(
+                "Remove a specific piece of information "
+                "from Rin's long-term memory."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "memory": {
+                        "type": "string",
+                        "description": (
+                            "The exact memory to remove."
+                        ),
+                    }
+                },
+                "required": ["memory"],
             },
         )
 

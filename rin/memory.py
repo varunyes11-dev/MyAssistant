@@ -80,9 +80,25 @@ class Memory:
 
         return list(self.memories)
 
+    def remove(self, memory: str) -> bool:
+        """
+        Remove a specific memory.
+
+        Return True if the memory was removed.
+        """
+
+        memory = memory.strip()
+
+        if memory in self.memories:
+            self.memories.remove(memory)
+            self._save()
+            return True
+
+        return False
+
     def clear(self) -> None:
         """
-        Clear all memories.
+        Remove all memories.
         """
 
         self.memories.clear()

@@ -21,3 +21,18 @@ if __name__ == "__main__":
 
     print("\nMemories after reloading:")
     print(memory_again.get_all())
+
+    removed = memory_again.remove(
+        "Varun likes Python."
+    )
+
+    print("\nRemoved Python memory:")
+    print(removed)
+
+    print("\nRemaining memories:")
+    print(memory_again.get_all())
+
+    memory_again.clear()
+
+    print("\nAfter clearing:")
+    print(memory_again.get_all())
