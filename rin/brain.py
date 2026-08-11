@@ -1,12 +1,19 @@
 from .ai import AIProvider, OllamaProvider
 from .config import SYSTEM_PROMPT
-from .tools import get_current_datetime
+from .tool_registry import ToolRegistry
 
 
 class Brain:
-    def __init__(self, provider: AIProvider | None = None):
-        # Use Ollama by default, but Brain doesn't depend on Ollama directly.
+    def __init__(
+        self,
+        provider: AIProvider | None = None,
+        tool_registry: ToolRegistry | None = None,
+    ):
+        # Use Ollama by default.
         self.provider = provider or OllamaProvider()
+
+        # Use the built-in tool registry by default.
+        self.tool_registry = tool_registry or ToolRegistry()
 
         self.messages = [
             {
@@ -16,9 +23,12 @@ class Brain:
         ]
 
     def ask(self, user_message: str) -> str:
-        # Handle date/time questions using the real system clock.
+        # Check whether a local tool should handle the request.
         if self._is_datetime_question(user_message):
-            return f"Today is {get_current_datetime()}."
+            tool = self.tool_registry.get("get_current_datetime")
+
+            if tool:
+                return f"Today is {tool()}."
 
         self.messages.append(
             {
