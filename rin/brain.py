@@ -16,7 +16,6 @@ class Brain:
         ]
 
     def ask(self, user_message: str) -> str:
-
         self.messages.append(
             {
                 "role": "user",
@@ -60,18 +59,14 @@ class Brain:
 
         tools = []
 
-        for name, description in self.tool_registry.get_descriptions().items():
-
+        for name, tool in self.tool_registry.tools.items():
             tools.append(
                 {
                     "type": "function",
                     "function": {
                         "name": name,
-                        "description": description,
-                        "parameters": {
-                            "type": "object",
-                            "properties": {},
-                        },
+                        "description": tool["description"],
+                        "parameters": tool["parameters"],
                     },
                 }
             )
@@ -83,7 +78,6 @@ class Brain:
         response: dict,
         tool_calls: list[dict],
     ) -> str:
-
         self.messages.append(
             {
                 "role": "assistant",
@@ -93,12 +87,14 @@ class Brain:
         )
 
         for tool_call in tool_calls:
-
             function = tool_call.get("function", {})
             tool_name = function.get("name")
-
             function_arguments = function.get("arguments", {})
-            result = self.tool_registry.execute(tool_name, function_arguments)
+
+            result = self.tool_registry.execute(
+                tool_name,
+                function_arguments,
+            )
 
             self.messages.append(
                 {

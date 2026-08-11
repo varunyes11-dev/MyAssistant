@@ -1,4 +1,4 @@
-from .tools import get_current_datetime
+from .tools import calculate, get_current_datetime
 
 
 class ToolRegistry:
@@ -15,10 +15,34 @@ class ToolRegistry:
         """
         Register Rin's built-in tools.
         """
+
         self.register(
             name="get_current_datetime",
             function=get_current_datetime,
             description="Get the current local date and time.",
+            parameters={
+                "type": "object",
+                "properties": {},
+            },
+        )
+
+        self.register(
+            name="calculate",
+            function=calculate,
+            description="Calculate a basic arithmetic expression.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "expression": {
+                        "type": "string",
+                        "description": (
+                            "A basic arithmetic expression such as "
+                            "25 * 18 or 144 / 12."
+                        ),
+                    }
+                },
+                "required": ["expression"],
+            },
         )
 
     def register(
@@ -26,43 +50,55 @@ class ToolRegistry:
         name: str,
         function,
         description: str,
+        parameters: dict | None = None,
     ):
         """
-        Register a tool.
+        Register a tool with its function, description,
+        and Ollama parameter schema.
         """
+
         self.tools[name] = {
             "function": function,
             "description": description,
+            "parameters": parameters or {
+                "type": "object",
+                "properties": {},
+            },
         }
 
     def get(self, name: str):
         """
         Get a registered tool.
         """
+
         return self.tools.get(name)
 
     def list_tools(self) -> list[str]:
         """
         Return the names of all registered tools.
         """
+
         return list(self.tools.keys())
 
     def get_descriptions(self) -> dict[str, str]:
         """
         Return descriptions of all registered tools.
         """
+
         return {
             name: tool["description"]
             for name, tool in self.tools.items()
         }
 
-    def execute(self, name: str, arguments: dict | None = None) -> str:
+    def execute(
+        self,
+        name: str,
+        arguments: dict | None = None,
+    ) -> str:
         """
         Execute a registered tool.
-
-        Tools that don't require arguments simply ignore
-        the arguments dictionary.
         """
+
         tool = self.get(name)
 
         if tool is None:
