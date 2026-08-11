@@ -3,6 +3,8 @@ from .tools import (
     get_battery_status,
     get_current_datetime,
     get_system_info,
+    open_application,
+    open_website,
 )
 
 
@@ -49,24 +51,68 @@ class ToolRegistry:
                 "required": ["expression"],
             },
         )
+
         self.register(
-    name="get_battery_status",
-    function=get_battery_status,
-    description="Get the current Mac battery percentage and charging status.",
-    parameters={
-        "type": "object",
-        "properties": {},
-    },
-)
+            name="get_battery_status",
+            function=get_battery_status,
+            description=(
+                "Get the current Mac battery percentage "
+                "and charging status."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {},
+            },
+        )
+
         self.register(
-    name="get_system_info",
-    function=get_system_info,
-    description="Get useful non-sensitive information about this Mac.",
-    parameters={
-        "type": "object",
-        "properties": {},
-    },
-)
+            name="get_system_info",
+            function=get_system_info,
+            description=(
+                "Get useful non-sensitive information about this Mac."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {},
+            },
+        )
+
+        self.register(
+            name="open_application",
+            function=open_application,
+            description="Open a macOS application by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "app_name": {
+                        "type": "string",
+                        "description": (
+                            "The exact name of the macOS "
+                            "application to open."
+                        ),
+                    }
+                },
+                "required": ["app_name"],
+            },
+        )
+
+        self.register(
+            name="open_website",
+            function=open_website,
+            description="Open a website in the default browser.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": (
+                            "The website URL to open."
+                        ),
+                    }
+                },
+                "required": ["url"],
+            },
+        )
 
     def register(
         self,

@@ -172,3 +172,56 @@ def get_system_info(key: str | None = None) -> str:
         return (
             f"I couldn't read the system information: {error}"
         )
+def open_application(app_name: str) -> str:
+    """
+    Open a macOS application by name.
+    """
+
+    if not app_name or not app_name.strip():
+        return "Please provide an application name."
+
+    try:
+        subprocess.run(
+            ["open", "-a", app_name.strip()],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        return f"Opened {app_name.strip()}."
+
+    except subprocess.CalledProcessError:
+        return f"I couldn't open {app_name.strip()}."
+
+    except Exception as error:
+        return f"I couldn't open the application: {error}"
+
+
+def open_website(url: str) -> str:
+    """
+    Open a website using the default browser.
+    """
+
+    if not url or not url.strip():
+        return "Please provide a website URL."
+
+    url = url.strip()
+
+    if not url.startswith(("https://", "http://")):
+        url = "https://" + url
+
+    try:
+        subprocess.run(
+            ["open", url],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        return f"Opened {url}."
+
+    except subprocess.CalledProcessError:
+        return f"I couldn't open {url}."
+
+    except Exception as error:
+        return f"I couldn't open the website: {error}"
