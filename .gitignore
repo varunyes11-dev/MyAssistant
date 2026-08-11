@@ -20,3 +20,6 @@ __pycache__/
 
 # Databases
 *.db
+# Rin local data
+data/temp/
+data/memory.json
