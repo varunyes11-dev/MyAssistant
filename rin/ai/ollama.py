@@ -13,14 +13,21 @@ class OllamaProvider(AIProvider):
     ):
         self.host = host.rstrip("/")
 
-    def chat(self, messages: list[dict]) -> str:
-        data = json.dumps(
-            {
-                "model": OLLAMA_MODEL,
-                "messages": messages,
-                "stream": False,
-            }
-        ).encode("utf-8")
+    def chat(
+        self,
+        messages: list[dict],
+        tools: list[dict] | None = None,
+    ) -> dict:
+        payload = {
+            "model": OLLAMA_MODEL,
+            "messages": messages,
+            "stream": False,
+        }
+
+        if tools:
+            payload["tools"] = tools
+
+        data = json.dumps(payload).encode("utf-8")
 
         request = urllib.request.Request(
             f"{self.host}/api/chat",
@@ -40,7 +47,12 @@ class OllamaProvider(AIProvider):
                     response.read().decode("utf-8")
                 )
 
-            return result["message"]["content"].strip()
+            message = result.get("message", {})
+
+            return {
+                "content": message.get("content", "").strip(),
+                "tool_calls": message.get("tool_calls", []),
+            }
 
         except Exception as error:
             raise RuntimeError(

@@ -4,16 +4,9 @@ from .tool_registry import ToolRegistry
 
 
 class Brain:
-    def __init__(
-        self,
-        provider: AIProvider | None = None,
-        tool_registry: ToolRegistry | None = None,
-    ):
-        # Use Ollama by default.
+    def __init__(self, provider: AIProvider | None = None):
         self.provider = provider or OllamaProvider()
-
-        # Use the built-in tool registry by default.
-        self.tool_registry = tool_registry or ToolRegistry()
+        self.tool_registry = ToolRegistry()
 
         self.messages = [
             {
@@ -23,12 +16,6 @@ class Brain:
         ]
 
     def ask(self, user_message: str) -> str:
-        # Check whether a local tool should handle the request.
-        if self._is_datetime_question(user_message):
-            tool = self.tool_registry.get("get_current_datetime")
-
-            if tool:
-                return f"Today is {tool()}."
 
         self.messages.append(
             {
@@ -38,12 +25,94 @@ class Brain:
         )
 
         try:
-            reply = self.provider.chat(self.messages)
+            response = self.provider.chat(
+                self.messages,
+                tools=self._get_tool_definitions(),
+            )
+
+            tool_calls = response.get("tool_calls", [])
+
+            if tool_calls:
+                return self._handle_tool_calls(
+                    response,
+                    tool_calls,
+                )
+
+            reply = response.get("content", "").strip()
+
+            self.messages.append(
+                {
+                    "role": "assistant",
+                    "content": reply,
+                }
+            )
+
+            return reply
 
         except Exception:
-            # Remove the user message if the AI request failed.
             self.messages.pop()
             raise
+
+    def _get_tool_definitions(self) -> list[dict]:
+        """
+        Convert registered tools into Ollama's tool format.
+        """
+
+        tools = []
+
+        for name, description in self.tool_registry.get_descriptions().items():
+
+            tools.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": description,
+                        "parameters": {
+                            "type": "object",
+                            "properties": {},
+                        },
+                    },
+                }
+            )
+
+        return tools
+
+    def _handle_tool_calls(
+        self,
+        response: dict,
+        tool_calls: list[dict],
+    ) -> str:
+
+        self.messages.append(
+            {
+                "role": "assistant",
+                "content": response.get("content", ""),
+                "tool_calls": tool_calls,
+            }
+        )
+
+        for tool_call in tool_calls:
+
+            function = tool_call.get("function", {})
+            tool_name = function.get("name")
+
+            function_arguments = function.get("arguments", {})
+            result = self.tool_registry.execute(tool_name, function_arguments)
+
+            self.messages.append(
+                {
+                    "role": "tool",
+                    "content": result,
+                }
+            )
+
+        final_response = self.provider.chat(
+            self.messages,
+            tools=self._get_tool_definitions(),
+        )
+
+        reply = final_response.get("content", "").strip()
 
         self.messages.append(
             {
@@ -53,31 +122,3 @@ class Brain:
         )
 
         return reply
-
-    @staticmethod
-    def _is_datetime_question(message: str) -> bool:
-        text = message.lower().strip()
-
-        date_keywords = (
-            "what date is today",
-            "what's today's date",
-            "what is today's date",
-            "today's date",
-            "todays date",
-            "what day is today",
-            "what day today",
-            "current date",
-            "today date",
-        )
-
-        time_keywords = (
-            "what time is it",
-            "what's the time",
-            "current time",
-            "what time",
-        )
-
-        return any(
-            keyword in text
-            for keyword in date_keywords + time_keywords
-        )
