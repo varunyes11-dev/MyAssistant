@@ -1,5 +1,6 @@
 from .ai import AIProvider, OllamaProvider
 from .config import DATA_DIR, SYSTEM_PROMPT
+from .conversation import ConversationHistory
 from .memory import Memory
 from .tool_registry import ToolRegistry
 
@@ -16,19 +17,20 @@ class Brain:
             self.memory
         )
 
-        self.messages = [
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT,
-            }
-        ]
+        self.conversation = ConversationHistory(
+            SYSTEM_PROMPT
+        )
+
+    @property
+    def messages(self):
+        """
+        Provide access to the current conversation messages.
+        """
+        return self.conversation.get_messages()
 
     def ask(self, user_message: str) -> str:
-        self.messages.append(
-            {
-                "role": "user",
-                "content": user_message,
-            }
+        self.conversation.add_user_message(
+            user_message
         )
 
         try:
@@ -53,11 +55,8 @@ class Brain:
                 "",
             ).strip()
 
-            self.messages.append(
-                {
-                    "role": "assistant",
-                    "content": reply,
-                }
+            self.conversation.add_assistant_message(
+                reply
             )
 
             return reply
@@ -92,15 +91,10 @@ class Brain:
         response: dict,
         tool_calls: list[dict],
     ) -> str:
-        self.messages.append(
-            {
-                "role": "assistant",
-                "content": response.get(
-                    "content",
-                    "",
-                ),
-                "tool_calls": tool_calls,
-            }
+
+        self.conversation.add_tool_call(
+            response.get("content", ""),
+            tool_calls,
         )
 
         for tool_call in tool_calls:
@@ -123,11 +117,8 @@ class Brain:
                 function_arguments,
             )
 
-            self.messages.append(
-                {
-                    "role": "tool",
-                    "content": result,
-                }
+            self.conversation.add_tool_result(
+                result
             )
 
         final_response = self.provider.chat(
@@ -140,11 +131,8 @@ class Brain:
             "",
         ).strip()
 
-        self.messages.append(
-            {
-                "role": "assistant",
-                "content": reply,
-            }
+        self.conversation.add_assistant_message(
+            reply
         )
 
         return reply
